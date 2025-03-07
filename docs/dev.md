@@ -28,6 +28,12 @@ This guide provides instructions for setting up your development environment and
    swift build
    ```
 
+4. Set up calendar permissions:
+   ```
+   ./setup-permissions.swift
+   ```
+   This will prompt you to grant calendar access permissions.
+
 ## Project Structure
 
 - `Sources/CalendarAPIBridge/` - Main application code
@@ -35,6 +41,7 @@ This guide provides instructions for setting up your development environment and
   - `Models/` - Data models
   - `Controllers/` - API controllers
 - `Tests/` - Test code
+- `setup-permissions.swift` - Script to set up calendar permissions
 
 ## Running the Application
 
@@ -50,6 +57,20 @@ swift run
 ```
 
 The server will start on port 8080 by default.
+
+### Running in the Background
+
+To run the application in the background:
+
+```
+nohup .build/debug/CalendarAPIBridge > /tmp/calendar-api-bridge.log 2>&1 &
+```
+
+Or for the release build:
+
+```
+nohup .build/release/CalendarAPIBridge > /tmp/calendar-api-bridge.log 2>&1 &
+```
 
 ## Testing
 
@@ -77,6 +98,11 @@ When running the application, you may need to grant Calendar access permissions.
    - Use `Application.make(_:)` instead of `Application.init(_:)`
    - Use `app.execute()` instead of `app.run()`
    - Avoid using `app.shutdown()` in async contexts
+
+6. **Permission Issues**: If you're having trouble with calendar permissions, try running the setup script:
+   ```
+   ./setup-permissions.swift
+   ```
 
 ## API Testing
 

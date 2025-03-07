@@ -1,45 +1,18 @@
 import Vapor
 import EventKit
+import Foundation
 
 // Configure and start the application
 struct CalendarAPIBridgeApp {
-    static func main() async throws {
-        // Create and configure Vapor application
-        var env = try Environment.detect()
-        try LoggingSystem.bootstrap(from: &env)
-        
-        // Use the async version of Application creation
-        let app = try await Application.make(env)
+    static func configure(_ app: Application) throws {
+        print("Configuring application...")
         
         // Configure routes
+        print("Configuring routes...")
         try configureRoutes(app)
         
-        // Request calendar access
-        try await requestCalendarAccess()
-        
-        // Start the server using the async execute method
-        try await app.execute()
-    }
-    
-    // Request access to the Calendar
-    static func requestCalendarAccess() async throws {
-        let eventStore = EKEventStore()
-        
-        // Request access to the Calendar
-        let accessGranted = await withCheckedContinuation { continuation in
-            eventStore.requestAccess(to: .event) { granted, error in
-                if let error = error {
-                    print("Error requesting Calendar access: \(error.localizedDescription)")
-                }
-                continuation.resume(returning: granted)
-            }
-        }
-        
-        guard accessGranted else {
-            throw Abort(.internalServerError, reason: "Calendar access denied. Please grant access in System Preferences.")
-        }
-        
-        print("Calendar access granted!")
+        // Add lifecycle handler
+        app.lifecycle.use(CalendarAccessHandler())
     }
     
     // Configure all routes
@@ -47,6 +20,11 @@ struct CalendarAPIBridgeApp {
         // Register controllers
         try registerCalendarController(app)
         try registerEventController(app)
+        
+        // Add a root route for health check
+        app.get { req -> String in
+            return "CalendarAPIBridge is running! Access the API at /calendars"
+        }
     }
     
     // Register calendar-related routes
@@ -60,8 +38,8 @@ struct CalendarAPIBridgeApp {
             try await calendarController.listCalendars(req)
         }
         
-        // GET /calendars/:id - Get calendar details
-        calendarsGroup.get(":id") { req in
+        // GET /calendars/:calendarId - Get calendar details
+        calendarsGroup.get(":calendarId") { req in
             try await calendarController.getCalendar(req)
         }
         
@@ -70,8 +48,8 @@ struct CalendarAPIBridgeApp {
             try await calendarController.createCalendar(req)
         }
         
-        // DELETE /calendars/:id - Delete a calendar
-        calendarsGroup.delete(":id") { req in
+        // DELETE /calendars/:calendarId - Delete a calendar
+        calendarsGroup.delete(":calendarId") { req in
             try await calendarController.deleteCalendar(req)
         }
     }
@@ -109,12 +87,43 @@ struct CalendarAPIBridgeApp {
     }
 }
 
-// Entry point
-Task {
-    do {
-        try await CalendarAPIBridgeApp.main()
-    } catch {
-        print("Error starting application: \(error)")
-        exit(1)
+// Calendar access handler
+final class CalendarAccessHandler: LifecycleHandler {
+    func willBoot(_ application: Application) throws {
+        print("Checking calendar access before server starts...")
+        
+        // Check calendar authorization status
+        let status = EKEventStore.authorizationStatus(for: .event)
+        print("Current authorization status: \(status.rawValue)")
+        
+        if status != .authorized {
+            print("⚠️ WARNING: Calendar access is not granted!")
+            print("⚠️ Calendar operations will fail until access is granted.")
+            print("⚠️ To grant access, go to System Preferences > Security & Privacy > Privacy > Calendars")
+            print("⚠️ and check the box next to CalendarAPIBridge.")
+        } else {
+            print("✅ Calendar access is already granted.")
+        }
     }
+    
+    func shutdown(_ application: Application) {
+        print("Application shutting down...")
+    }
+}
+
+// Entry point
+print("Starting CalendarAPIBridge...")
+
+// Create and configure the application
+var env = try Environment.detect()
+try LoggingSystem.bootstrap(from: &env)
+let app = Application(env)
+defer { app.shutdown() }
+
+do {
+    try CalendarAPIBridgeApp.configure(app)
+    print("Starting server on http://localhost:8080...")
+    try app.run()
+} catch {
+    print("Error starting application: \(error)")
 } 

@@ -22,12 +22,32 @@ A Swift application that exposes macOS Calendar APIs through a local HTTP server
    ```
    swift build -c release
    ```
-3. Copy the built executable to a location of your choice:
+3. Set up calendar permissions:
+   ```
+   ./setup-permissions.swift
+   ```
+   This will prompt you to grant calendar access permissions.
+
+4. Copy the built executable to a location of your choice:
    ```
    cp .build/release/CalendarAPIBridge /usr/local/bin/
    ```
 
 ## Usage
+
+### Setting Up Calendar Permissions
+
+Before running the application, you need to grant it access to your macOS Calendar. You can do this by running the setup script:
+
+```
+./setup-permissions.swift
+```
+
+If you don't see the permission prompt, or if you previously denied access, you can grant access in System Preferences:
+
+1. Open System Preferences
+2. Go to Security & Privacy > Privacy > Calendars
+3. Check the box next to CalendarAPIBridge to grant access
 
 ### Starting the Server
 
@@ -37,15 +57,13 @@ CalendarAPIBridge
 
 The server will start on port 8080 by default.
 
-### Calendar Access Permissions
+### Running in the Background
 
-When you run the application for the first time, macOS will prompt you to grant Calendar access permissions. You need to approve this request for the application to function properly.
+To run the application in the background:
 
-If you don't see the prompt, or if you previously denied access, you can grant access in System Preferences:
-
-1. Open System Preferences
-2. Go to Security & Privacy > Privacy > Calendars
-3. Check the box next to CalendarAPIBridge to grant access
+```
+nohup CalendarAPIBridge > /tmp/calendar-api-bridge.log 2>&1 &
+```
 
 ### API Endpoints
 
@@ -113,6 +131,11 @@ Replace `{calendarId}` with an actual calendar ID.
 2. **Port Already in Use**: If port 8080 is already in use, you can modify the port in the code or terminate the other application using that port.
 
 3. **Application Crashes**: Check the error logs for more information. The application may crash if it cannot access the Calendar or if there are issues with the HTTP server.
+
+4. **Permission Issues**: If you're having trouble with calendar permissions, try running the setup script:
+   ```
+   ./setup-permissions.swift
+   ```
 
 ## Development
 

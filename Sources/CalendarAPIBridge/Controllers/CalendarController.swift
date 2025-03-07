@@ -17,10 +17,10 @@ class CalendarController {
         return calendars.map { Calendar(from: $0) }
     }
     
-    // GET /calendars/:id - Get calendar details
+    // GET /calendars/:calendarId - Get calendar details
     func getCalendar(_ req: Request) async throws -> Calendar {
         // Get calendar ID from request parameters
-        guard let calendarId = req.parameters.get("id") else {
+        guard let calendarId = req.parameters.get("calendarId") else {
             throw Abort(.badRequest, reason: "Calendar ID is required")
         }
         
@@ -65,10 +65,10 @@ class CalendarController {
         }
     }
     
-    // DELETE /calendars/:id - Delete a calendar
+    // DELETE /calendars/:calendarId - Delete a calendar
     func deleteCalendar(_ req: Request) async throws -> HTTPStatus {
         // Get calendar ID from request parameters
-        guard let calendarId = req.parameters.get("id") else {
+        guard let calendarId = req.parameters.get("calendarId") else {
             throw Abort(.badRequest, reason: "Calendar ID is required")
         }
         
