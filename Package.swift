@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "CalendarAPIBridge",
+    name: "MacAPIBridge",
     platforms: [
         .macOS(.v12)
     ],
     products: [
-        .executable(name: "CalendarAPIBridge", targets: ["CalendarAPIBridge"])
+        .executable(name: "MacAPIBridge", targets: ["MacAPIBridge"])
     ],
     dependencies: [
         // Vapor for HTTP server
@@ -15,14 +15,14 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "CalendarAPIBridge",
+            name: "MacAPIBridge",
             dependencies: [
                 .product(name: "Vapor", package: "vapor")
             ]
         ),
         .testTarget(
-            name: "CalendarAPIBridgeTests",
-            dependencies: ["CalendarAPIBridge"]
+            name: "MacAPIBridgeTests",
+            dependencies: ["MacAPIBridge"]
         )
     ]
 ) 

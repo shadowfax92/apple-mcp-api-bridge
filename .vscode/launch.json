@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:swift-apple-api}",
+            "name": "Debug CalendarAPIBridge",
+            "program": "${workspaceFolder:swift-apple-api}/.build/debug/CalendarAPIBridge",
+            "preLaunchTask": "swift: Build Debug CalendarAPIBridge"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:swift-apple-api}",
+            "name": "Release CalendarAPIBridge",
+            "program": "${workspaceFolder:swift-apple-api}/.build/release/CalendarAPIBridge",
+            "preLaunchTask": "swift: Build Release CalendarAPIBridge"
+        }
+    ]
+}

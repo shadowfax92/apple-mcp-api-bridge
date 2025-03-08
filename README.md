@@ -1,6 +1,37 @@
-# Calendar API Bridge
+# MacAPIBridge
 
-A Swift application that exposes macOS Calendar APIs through a local HTTP server. This allows Node.js applications and other services to interact with the macOS Calendar without needing to implement Swift code directly.
+A Swift package that provides a bridge between macOS APIs and HTTP clients.
+
+## Features
+
+- RESTful API for macOS Calendar functionality
+- Configurable port via environment variables
+
+## Configuration
+
+The server port can be configured using the `MAC_API_BRIDGE_PORT` environment variable:
+
+```bash
+# Run on port 3000
+MAC_API_BRIDGE_PORT=3000 swift run MacAPIBridge
+```
+
+If no port is specified, the server will run on the default port 8080.
+
+## Building and Running
+
+```bash
+# Build the package
+swift build
+
+# Run the server
+swift run MacAPIBridge
+```
+
+## Requirements
+
+- macOS 12.0 or later
+- Swift 5.5 or later
 
 ## ⚠️ Important: Date Format Requirements
 

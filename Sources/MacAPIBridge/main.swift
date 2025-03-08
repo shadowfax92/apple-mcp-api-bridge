@@ -3,7 +3,7 @@ import EventKit
 import Foundation
 
 // Configure and start the application
-struct CalendarAPIBridgeApp {
+struct MacAPIBridgeApp {
     static func configure(_ app: Application) throws {
         print("Configuring application...")
         
@@ -37,7 +37,7 @@ struct CalendarAPIBridgeApp {
         
         // Add a root route for health check
         app.get { req -> String in
-            return "CalendarAPIBridge is running! Access the API at /calendars"
+            return "MacAPIBridge is running! Access the API at /calendars"
         }
     }
     
@@ -114,7 +114,7 @@ final class CalendarAccessHandler: LifecycleHandler {
             print("⚠️ WARNING: Calendar access is not granted!")
             print("⚠️ Calendar operations will fail until access is granted.")
             print("⚠️ To grant access, go to System Preferences > Security & Privacy > Privacy > Calendars")
-            print("⚠️ and check the box next to CalendarAPIBridge.")
+            print("⚠️ and check the box next to MacAPIBridge.")
         } else {
             print("✅ Calendar access is already granted.")
         }
@@ -126,7 +126,7 @@ final class CalendarAccessHandler: LifecycleHandler {
 }
 
 // Entry point
-print("Starting CalendarAPIBridge...")
+print("Starting MacAPIBridge...")
 
 // Create and configure the application
 var env = try Environment.detect()
@@ -134,9 +134,17 @@ try LoggingSystem.bootstrap(from: &env)
 let app = Application(env)
 defer { app.shutdown() }
 
+// Configure the server port from environment variable
+if let portString = Environment.get("MAC_API_BRIDGE_PORT"), let port = Int(portString) {
+    app.http.server.configuration.port = port
+    print("Using custom port: \(port)")
+} else {
+    print("Using default port: 8080")
+}
+
 do {
-    try CalendarAPIBridgeApp.configure(app)
-    print("Starting server on http://localhost:8080...")
+    try MacAPIBridgeApp.configure(app)
+    print("Starting server on http://localhost:\(app.http.server.configuration.port)...")
     try app.run()
 } catch {
     print("Error starting application: \(error)")
