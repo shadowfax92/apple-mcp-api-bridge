@@ -72,6 +72,21 @@ Using any other date format will result in a 400 Bad Request error.
 
 ## Installation
 
+### Option 1: One-Line Installation (Recommended)
+
+You can install MacAPIBridge with a single command:
+
+```bash
+curl -fsSL https://storage.googleapis.com/felafax-public/mcp-install/install.sh | bash
+```
+
+This will:
+1. Download and install the MacAPIBridge binary to `~/.mcp/bin/MacAPIBridge`
+2. Set up the necessary permissions
+3. Configure Claude Desktop to use MacAPIBridge
+
+### Option 2: Manual Installation
+
 1. Clone this repository
 2. Build the application:
    ```
@@ -87,6 +102,32 @@ Using any other date format will result in a 400 Bad Request error.
    ```
    cp .build/release/MacAPIBridge /usr/local/bin/
    ```
+
+### Claude Desktop Integration
+
+MacAPIBridge can be integrated with Claude Desktop by updating the configuration file at `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "globalShortcut": "",
+  "mcpServers": {
+    "reminders": {
+      "command": "node",
+      "args": [
+        "/Users/shadowfax/code/hackathon/mcp/mcp-apple-reminders/dist/index.js"
+      ]
+    },
+    "calendar": {
+      "command": "node",
+      "args": [
+        "/Users/shadowfax/code/hackathon/mcp/mcp-apple-calendars/dist/index.js"
+      ]
+    }
+  }
+}
+```
+
+The one-line installer will automatically set up this configuration.
 
 ## Usage
 
@@ -199,6 +240,16 @@ Replace `{calendarId}` with an actual calendar ID.
 ## Development
 
 See the [Development Guide](docs/dev.md) for information on how to set up your development environment and contribute to the project.
+
+## Installation Scripts
+
+The `scripts` directory contains tools for deploying and installing MacAPIBridge:
+
+- `upload_to_gcp.sh`: Uploads the binary and installation files to Google Cloud Storage
+- `install_from_gcp.sh`: Downloads and installs MacAPIBridge from Google Cloud Storage
+- `mcp-install/install.sh`: Standalone installation script for one-line installation
+
+For more information, see the [Scripts README](scripts/README.md).
 
 ## License
 

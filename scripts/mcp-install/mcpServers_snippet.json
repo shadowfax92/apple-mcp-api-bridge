@@ -1,0 +1,14 @@
+"mcpServers": {
+  "reminders": {
+    "command": "node",
+    "args": [
+      "/Users/shadowfax/.mcp/node/reminders/index.js"
+    ]
+  },
+  "calendar": {
+    "command": "node",
+    "args": [
+      "/Users/shadowfax/.mcp/node/calendars/index.js"
+    ]
+  }
+}
