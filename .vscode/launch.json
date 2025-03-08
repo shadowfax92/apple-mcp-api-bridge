@@ -17,6 +17,24 @@
             "name": "Release CalendarAPIBridge",
             "program": "${workspaceFolder:swift-apple-api}/.build/release/CalendarAPIBridge",
             "preLaunchTask": "swift: Build Release CalendarAPIBridge"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:swift-apple-api}",
+            "name": "Debug MacAPIBridge",
+            "program": "${workspaceFolder:swift-apple-api}/.build/debug/MacAPIBridge",
+            "preLaunchTask": "swift: Build Debug MacAPIBridge"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:swift-apple-api}",
+            "name": "Release MacAPIBridge",
+            "program": "${workspaceFolder:swift-apple-api}/.build/release/MacAPIBridge",
+            "preLaunchTask": "swift: Build Release MacAPIBridge"
         }
     ]
 }

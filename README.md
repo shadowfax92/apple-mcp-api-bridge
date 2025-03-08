@@ -70,12 +70,6 @@ Using any other date format will result in a 400 Bad Request error.
 - RESTful API with JSON request/response format
 - Runs as a background service on macOS
 
-## Requirements
-
-- macOS 12.0 or later
-- Swift 5.5 or later
-- Xcode 13.0 or later (for development)
-
 ## Installation
 
 1. Clone this repository
@@ -91,7 +85,7 @@ Using any other date format will result in a 400 Bad Request error.
 
 4. Copy the built executable to a location of your choice:
    ```
-   cp .build/release/CalendarAPIBridge /usr/local/bin/
+   cp .build/release/MacAPIBridge /usr/local/bin/
    ```
 
 ## Usage
@@ -108,22 +102,26 @@ If you don't see the permission prompt, or if you previously denied access, you 
 
 1. Open System Preferences
 2. Go to Security & Privacy > Privacy > Calendars
-3. Check the box next to CalendarAPIBridge to grant access
+3. Check the box next to MacAPIBridge to grant access
 
 ### Starting the Server
 
 ```
-CalendarAPIBridge
+MacAPIBridge
 ```
 
-The server will start on port 8080 by default.
+The server will start on port 8080 by default. To use a custom port:
+
+```
+MAC_API_BRIDGE_PORT=3000 MacAPIBridge
+```
 
 ### Running in the Background
 
 To run the application in the background:
 
 ```
-nohup CalendarAPIBridge > /tmp/calendar-api-bridge.log 2>&1 &
+nohup MacAPIBridge > /tmp/mac-api-bridge.log 2>&1 &
 ```
 
 ### API Endpoints
@@ -189,7 +187,7 @@ Replace `{calendarId}` with an actual calendar ID.
 
 1. **Calendar Access Denied**: Make sure to grant Calendar access to the application in System Preferences > Security & Privacy > Privacy > Calendars.
 
-2. **Port Already in Use**: If port 8080 is already in use, you can modify the port in the code or terminate the other application using that port.
+2. **Port Already in Use**: If port 8080 is already in use, you can specify a different port using the `MAC_API_BRIDGE_PORT` environment variable.
 
 3. **Application Crashes**: Check the error logs for more information. The application may crash if it cannot access the Calendar or if there are issues with the HTTP server.
 
