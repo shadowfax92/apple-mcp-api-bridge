@@ -2,6 +2,36 @@
 
 A Swift application that exposes macOS Calendar APIs through a local HTTP server. This allows Node.js applications and other services to interact with the macOS Calendar without needing to implement Swift code directly.
 
+## ⚠️ Important: Date Format Requirements
+
+When working with dates in API requests (creating/updating events), you **must** use one of these supported date formats:
+
+1. **ISO8601 with UTC timezone (Z) - RECOMMENDED**:
+   ```javascript
+   {
+     "startDate": "2025-03-09T10:00:00.000Z",
+     "endDate": "2025-03-09T11:00:00.000Z"
+   }
+   ```
+
+2. **ISO8601 without milliseconds**:
+   ```javascript
+   {
+     "startDate": "2025-03-09T10:00:00",
+     "endDate": "2025-03-09T11:00:00"
+   }
+   ```
+
+3. **ISO8601 with space instead of T**:
+   ```javascript
+   {
+     "startDate": "2025-03-09 10:00:00",
+     "endDate": "2025-03-09 11:00:00"
+   }
+   ```
+
+Using any other date format will result in a 400 Bad Request error.
+
 ## Features
 
 - List, view, create, and delete calendars
@@ -143,4 +173,4 @@ See the [Development Guide](docs/dev.md) for information on how to set up your d
 
 ## License
 
-MIT 
+MIT

@@ -82,17 +82,47 @@ class EventController {
         }
         
         // Decode request body
-        let eventRequest = try req.content.decode(EventRequest.self)
-        
-        // Create a new event
-        let newEvent = eventRequest.toEKEvent(eventStore: eventStore, calendar: calendar)
-        
-        // Save the event
         do {
-            try eventStore.save(newEvent, span: .thisEvent, commit: true)
-            return Event(from: newEvent)
+            let eventRequest = try req.content.decode(EventRequest.self)
+            
+            // Create a new event
+            let newEvent = eventRequest.toEKEvent(eventStore: eventStore, calendar: calendar)
+            
+            // Save the event
+            do {
+                try eventStore.save(newEvent, span: .thisEvent, commit: true)
+                return Event(from: newEvent)
+            } catch {
+                throw Abort(.internalServerError, reason: "Failed to create event: \(error.localizedDescription)")
+            }
+        } catch let error as DecodingError {
+            // Handle date decoding errors specifically
+            let errorDescription: String
+            
+            switch error {
+            case .typeMismatch(let type, let context):
+                if type == Date.self {
+                    errorDescription = "Invalid date format. Please provide dates in ISO8601 format (e.g., '2025-03-09T10:00:00.000Z' or '2025-03-09T10:00:00')."
+                } else {
+                    errorDescription = "Type mismatch at path: \(context.codingPath.map { $0.stringValue }.joined(separator: ".")). Expected \(type)."
+                }
+            case .valueNotFound(let type, let context):
+                errorDescription = "Value of type \(type) not found at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))."
+            case .keyNotFound(let key, let context):
+                errorDescription = "Key '\(key.stringValue)' not found at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))."
+            case .dataCorrupted(let context):
+                if context.debugDescription.contains("date") || context.debugDescription.contains("ISO8601") {
+                    errorDescription = "Invalid date format. Please provide dates in ISO8601 format (e.g., '2025-03-09T10:00:00.000Z' or '2025-03-09T10:00:00')."
+                } else {
+                    errorDescription = "Data corrupted at path: \(context.codingPath.map { $0.stringValue }.joined(separator: ".")). \(context.debugDescription)"
+                }
+            @unknown default:
+                errorDescription = "Unknown decoding error: \(error.localizedDescription)"
+            }
+            
+            throw Abort(.badRequest, reason: errorDescription)
         } catch {
-            throw Abort(.internalServerError, reason: "Failed to create event: \(error.localizedDescription)")
+            throw Abort(.badRequest, reason: "Failed to decode request: \(error.localizedDescription)")
         }
     }
     
@@ -128,25 +158,55 @@ class EventController {
         }
         
         // Decode request body
-        let eventRequest = try req.content.decode(EventRequest.self)
-        
-        // Update the event
-        existingEvent.title = eventRequest.title
-        existingEvent.startDate = eventRequest.startDate
-        existingEvent.endDate = eventRequest.endDate
-        existingEvent.isAllDay = eventRequest.isAllDay ?? existingEvent.isAllDay
-        existingEvent.location = eventRequest.location
-        existingEvent.notes = eventRequest.notes
-        if let urlString = eventRequest.url, let url = URL(string: urlString) {
-            existingEvent.url = url
-        }
-        
-        // Save the updated event
         do {
-            try eventStore.save(existingEvent, span: .thisEvent, commit: true)
-            return Event(from: existingEvent)
+            let eventRequest = try req.content.decode(EventRequest.self)
+            
+            // Update the event
+            existingEvent.title = eventRequest.title
+            existingEvent.startDate = eventRequest.startDate
+            existingEvent.endDate = eventRequest.endDate
+            existingEvent.isAllDay = eventRequest.isAllDay ?? existingEvent.isAllDay
+            existingEvent.location = eventRequest.location
+            existingEvent.notes = eventRequest.notes
+            if let urlString = eventRequest.url, let url = URL(string: urlString) {
+                existingEvent.url = url
+            }
+            
+            // Save the updated event
+            do {
+                try eventStore.save(existingEvent, span: .thisEvent, commit: true)
+                return Event(from: existingEvent)
+            } catch {
+                throw Abort(.internalServerError, reason: "Failed to update event: \(error.localizedDescription)")
+            }
+        } catch let error as DecodingError {
+            // Handle date decoding errors specifically
+            let errorDescription: String
+            
+            switch error {
+            case .typeMismatch(let type, let context):
+                if type == Date.self {
+                    errorDescription = "Invalid date format. Please provide dates in ISO8601 format (e.g., '2025-03-09T10:00:00.000Z' or '2025-03-09T10:00:00')."
+                } else {
+                    errorDescription = "Type mismatch at path: \(context.codingPath.map { $0.stringValue }.joined(separator: ".")). Expected \(type)."
+                }
+            case .valueNotFound(let type, let context):
+                errorDescription = "Value of type \(type) not found at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))."
+            case .keyNotFound(let key, let context):
+                errorDescription = "Key '\(key.stringValue)' not found at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))."
+            case .dataCorrupted(let context):
+                if context.debugDescription.contains("date") || context.debugDescription.contains("ISO8601") {
+                    errorDescription = "Invalid date format. Please provide dates in ISO8601 format (e.g., '2025-03-09T10:00:00.000Z' or '2025-03-09T10:00:00')."
+                } else {
+                    errorDescription = "Data corrupted at path: \(context.codingPath.map { $0.stringValue }.joined(separator: ".")). \(context.debugDescription)"
+                }
+            @unknown default:
+                errorDescription = "Unknown decoding error: \(error.localizedDescription)"
+            }
+            
+            throw Abort(.badRequest, reason: errorDescription)
         } catch {
-            throw Abort(.internalServerError, reason: "Failed to update event: \(error.localizedDescription)")
+            throw Abort(.badRequest, reason: "Failed to decode request: \(error.localizedDescription)")
         }
     }
     

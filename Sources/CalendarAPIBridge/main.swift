@@ -7,12 +7,26 @@ struct CalendarAPIBridgeApp {
     static func configure(_ app: Application) throws {
         print("Configuring application...")
         
+        // Configure content decoders
+        print("Configuring content decoders...")
+        configureContentDecoders(app)
+        
         // Configure routes
         print("Configuring routes...")
         try configureRoutes(app)
         
         // Add lifecycle handler
         app.lifecycle.use(CalendarAccessHandler())
+    }
+    
+    // Configure content decoders
+    static func configureContentDecoders(_ app: Application) {
+        // Register our custom date decoder for JSON content
+        let jsonDecoder = FlexibleDateDecoder()
+        ContentConfiguration.global.use(decoder: jsonDecoder, for: .json)
+        
+        // Log that we've configured the decoder
+        print("✅ Configured flexible date decoder for JSON content")
     }
     
     // Configure all routes
