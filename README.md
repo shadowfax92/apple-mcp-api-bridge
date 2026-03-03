@@ -1,256 +1,124 @@
-# MacAPIBridge
+<div align="center">
 
-A Swift package that provides a bridge between macOS APIs and HTTP clients.
+# 🍎 Apple MCP API Bridge
 
-## Features
+**Native Swift bridge for macOS Calendar.**
 
-- RESTful API for macOS Calendar functionality
-- Configurable port via environment variables
+*Access Apple Calendar from any language via HTTP.*
 
-## Configuration
+</div>
 
-The server port can be configured using the `MAC_API_BRIDGE_PORT` environment variable:
+Your MCP server needs to read and write macOS Calendar events, but EventKit only speaks Swift. This bridge runs a local HTTP server that exposes Calendar operations as a REST API. Any language, any tool, any MCP server — just make HTTP requests to localhost.
 
-```bash
-# Run on port 3000
-MAC_API_BRIDGE_PORT=3000 swift run MacAPIBridge
-```
+- 📅 **Full CRUD** — list, create, update, and delete calendars and events
+- 🔌 **REST API** — standard HTTP endpoints, works with any HTTP client
+- 🎨 **Color support** — hex color codes for calendar creation
+- 📆 **Flexible dates** — accepts multiple ISO8601 formats
+- 🔒 **Permission-aware** — respects macOS calendar access and read-only calendars
+- ⚡ **One-line install** — curl script handles build and setup
 
-If no port is specified, the server will run on the default port 8080.
+---
 
-## Building and Running
+## Tech Stack
 
-```bash
-# Build the package
-swift build
+| | |
+|---|---|
+| **Language** | Swift 5.5+ |
+| **Framework** | Vapor 4.0 (HTTP server) |
+| **Apple API** | EventKit (calendar access) |
+| **Platform** | macOS 12.0+ |
 
-# Run the server
-swift run MacAPIBridge
-```
+## Install
 
-## Requirements
-
-- macOS 12.0 or later
-- Swift 5.5 or later
-
-## ⚠️ Important: Date Format Requirements
-
-When working with dates in API requests (creating/updating events), you **must** use one of these supported date formats:
-
-1. **ISO8601 with UTC timezone (Z) - RECOMMENDED**:
-   ```javascript
-   {
-     "startDate": "2025-03-09T10:00:00.000Z",
-     "endDate": "2025-03-09T11:00:00.000Z"
-   }
-   ```
-
-2. **ISO8601 without milliseconds**:
-   ```javascript
-   {
-     "startDate": "2025-03-09T10:00:00",
-     "endDate": "2025-03-09T11:00:00"
-   }
-   ```
-
-3. **ISO8601 with space instead of T**:
-   ```javascript
-   {
-     "startDate": "2025-03-09 10:00:00",
-     "endDate": "2025-03-09 11:00:00"
-   }
-   ```
-
-Using any other date format will result in a 400 Bad Request error.
-
-## Features
-
-- List, view, create, and delete calendars
-- List, view, create, update, and delete events
-- RESTful API with JSON request/response format
-- Runs as a background service on macOS
-
-## Installation
-
-### Option 1: One-Line Installation (Recommended)
-
-You can install MacAPIBridge with a single command:
-
-```bash
+```sh
 curl -fsSL https://storage.googleapis.com/felafax-public/mcp-install/install.sh | bash
 ```
 
-This will:
-1. Download and install the MacAPIBridge binary to `~/.mcp/bin/MacAPIBridge`
-2. Set up the necessary permissions
-3. Configure Claude Desktop to use MacAPIBridge
+Or build manually:
 
-### Option 2: Manual Installation
+```sh
+swift build -c release
+cp .build/release/MacAPIBridge /usr/local/bin/
+```
 
-1. Clone this repository
-2. Build the application:
-   ```
-   swift build -c release
-   ```
-3. Set up calendar permissions:
-   ```
-   ./setup-permissions.swift
-   ```
-   This will prompt you to grant calendar access permissions.
+## Quick Start
 
-4. Copy the built executable to a location of your choice:
-   ```
-   cp .build/release/MacAPIBridge /usr/local/bin/
-   ```
+```sh
+# 1. Start the bridge
+MacAPIBridge
+# → Server running on http://localhost:8080
 
-### Claude Desktop Integration
+# 2. List your calendars
+curl http://localhost:8080/calendars
 
-MacAPIBridge can be integrated with Claude Desktop by updating the configuration file at `~/Library/Application Support/Claude/claude_desktop_config.json`:
+# 3. Create an event
+curl -X POST http://localhost:8080/calendars/{id}/events \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Meeting","startDate":"2025-03-09T10:00:00Z","endDate":"2025-03-09T11:00:00Z"}'
+```
+
+## Config
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MAC_API_BRIDGE_PORT` | Server port | `8080` |
+
+## API
+
+### Calendars
+
+```
+GET    /calendars          # List all calendars
+GET    /calendars/:id      # Get calendar details
+POST   /calendars          # Create calendar  {"title", "color"}
+DELETE /calendars/:id      # Delete calendar
+```
+
+### Events
+
+```
+GET    /calendars/:calId/events              # List events (30d past → 1y future)
+GET    /calendars/:calId/events/:eventId     # Get event details
+POST   /calendars/:calId/events              # Create event
+PUT    /calendars/:calId/events/:eventId     # Update event
+DELETE /calendars/:calId/events/:eventId     # Delete event
+```
+
+### Event Fields
 
 ```json
 {
-  "globalShortcut": "",
+  "title": "Team standup",
+  "startDate": "2025-03-09T10:00:00Z",
+  "endDate": "2025-03-09T10:30:00Z",
+  "location": "Room 4",
+  "notes": "Weekly sync",
+  "url": "https://meet.google.com/abc",
+  "isAllDay": false
+}
+```
+
+## Claude Desktop Integration
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
   "mcpServers": {
-    "reminders": {
-      "command": "node",
-      "args": [
-        "/Users/shadowfax/code/hackathon/mcp/mcp-apple-reminders/dist/index.js"
-      ]
-    },
     "calendar": {
       "command": "node",
-      "args": [
-        "/Users/shadowfax/code/hackathon/mcp/mcp-apple-calendars/dist/index.js"
-      ]
+      "args": ["$HOME/.mcp/node/calendars/index.js"]
     }
   }
 }
 ```
 
-The one-line installer will automatically set up this configuration.
+## How It Works
 
-## Usage
+A Vapor HTTP server runs locally and uses EventKit to talk to macOS Calendar. Each API request maps to an EventKit operation — no external databases, no sync, no state. The bridge reads from and writes to the same calendars you see in Apple Calendar.app.
 
-### Setting Up Calendar Permissions
+Calendar access requires a one-time macOS permission grant. The bridge checks authorization at startup and warns if access is missing.
 
-Before running the application, you need to grant it access to your macOS Calendar. You can do this by running the setup script:
+---
 
-```
-./setup-permissions.swift
-```
-
-If you don't see the permission prompt, or if you previously denied access, you can grant access in System Preferences:
-
-1. Open System Preferences
-2. Go to Security & Privacy > Privacy > Calendars
-3. Check the box next to MacAPIBridge to grant access
-
-### Starting the Server
-
-```
-MacAPIBridge
-```
-
-The server will start on port 8080 by default. To use a custom port:
-
-```
-MAC_API_BRIDGE_PORT=3000 MacAPIBridge
-```
-
-### Running in the Background
-
-To run the application in the background:
-
-```
-nohup MacAPIBridge > /tmp/mac-api-bridge.log 2>&1 &
-```
-
-### API Endpoints
-
-#### Calendars
-
-- `GET /calendars` - List all calendars
-- `GET /calendars/:id` - Get calendar details
-- `POST /calendars` - Create a new calendar
-- `DELETE /calendars/:id` - Delete a calendar
-
-#### Events
-
-- `GET /calendars/:calendarId/events` - List events in a calendar
-- `GET /calendars/:calendarId/events/:eventId` - Get event details
-- `POST /calendars/:calendarId/events` - Create a new event
-- `PUT /calendars/:calendarId/events/:eventId` - Update an event
-- `DELETE /calendars/:calendarId/events/:eventId` - Delete an event
-
-### Example API Requests
-
-#### List Calendars
-
-```
-curl http://localhost:8080/calendars
-```
-
-#### Create Calendar
-
-```
-curl -X POST http://localhost:8080/calendars \
-  -H "Content-Type: application/json" \
-  -d '{"title": "My New Calendar", "color": "#FF0000"}'
-```
-
-#### List Events
-
-```
-curl http://localhost:8080/calendars/{calendarId}/events
-```
-
-Replace `{calendarId}` with an actual calendar ID from the list calendars response.
-
-#### Create Event
-
-```
-curl -X POST http://localhost:8080/calendars/{calendarId}/events \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Meeting",
-    "startDate": "2023-06-01T10:00:00Z",
-    "endDate": "2023-06-01T11:00:00Z",
-    "location": "Conference Room",
-    "notes": "Discuss project status"
-  }'
-```
-
-Replace `{calendarId}` with an actual calendar ID.
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Calendar Access Denied**: Make sure to grant Calendar access to the application in System Preferences > Security & Privacy > Privacy > Calendars.
-
-2. **Port Already in Use**: If port 8080 is already in use, you can specify a different port using the `MAC_API_BRIDGE_PORT` environment variable.
-
-3. **Application Crashes**: Check the error logs for more information. The application may crash if it cannot access the Calendar or if there are issues with the HTTP server.
-
-4. **Permission Issues**: If you're having trouble with calendar permissions, try running the setup script:
-   ```
-   ./setup-permissions.swift
-   ```
-
-## Development
-
-See the [Development Guide](docs/dev.md) for information on how to set up your development environment and contribute to the project.
-
-## Installation Scripts
-
-The `scripts` directory contains tools for deploying and installing MacAPIBridge:
-
-- `upload_to_gcp.sh`: Uploads the binary and installation files to Google Cloud Storage
-- `install_from_gcp.sh`: Downloads and installs MacAPIBridge from Google Cloud Storage
-- `mcp-install/install.sh`: Standalone installation script for one-line installation
-
-For more information, see the [Scripts README](scripts/README.md).
-
-## License
-
-MIT
+> Personal tool built for MCP calendar integration. Feel free to fork and adapt.
